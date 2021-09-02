@@ -4,7 +4,8 @@ export default class Movies extends Component {
     constructor() {
         super();
         this.state = {
-            movies: getMovies()
+            movies: getMovies(),
+            searchText: ""
         }
     }
     onDelete = (id) => {
@@ -18,7 +19,48 @@ export default class Movies extends Component {
             movies: newArr
         })
     }
+
+    sorted = (key, order) => {
+        let tempArr = [...this.state.movies]
+        if (key === "stock") {
+            tempArr.sort(function (keyA, keyB) {
+                if (order === "dsc") {
+                    return keyA.numberInStock - keyB.numberInStock;
+                }
+                else {
+                    return keyB.numberInStock - keyA.numberInStock;
+                }
+            })
+        }
+        else {
+            tempArr.sort(function (keyA, keyB) {
+                if (order === "dsc") {
+                    return keyA.dailyRentalRate - keyB.dailyRentalRate;
+                }
+                else {
+                    return keyB.dailyRentalRate - keyA.dailyRentalRate;
+                }
+            })
+        }
+        this.setState({ movies: tempArr })
+    }
+
     render() {
+        let filteredArr = [];
+        let { movies, searchText } = this.state;
+        if (searchText === "") {
+            filteredArr = movies;
+        }
+        else {
+            filteredArr = movies.filter((movie) => {
+                let title = movie.title.toLowerCase();
+                if (title.includes(searchText.toLowerCase())) {
+                    return true;
+                }
+                return false;
+            })
+        }
+        let count = 0;
         return (
             <div className="container">
                 <div className="row">
@@ -26,23 +68,42 @@ export default class Movies extends Component {
                         Hello
                     </div>
                     <div className="col-9">
+                        <div className="input-group mb-3">
+                            <input onChange={(e) => { this.setState({ searchText: e.target.value }) }} type="text" className="form-control" placeholder="Search Movie" aria-label="Username" aria-describedby="basic-addon1" />
+                        </div>
                         <table className="table">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
                                     <th scope="col">Title</th>
                                     <th scope="col">Genre</th>
-                                    <th scope="col">Stock</th>
-                                    <th scope="col">Rental</th>
+                                    <th scope="col">
+                                        <i className="fas fa-sort-up" onClick={() => {
+                                            this.sorted("stock", "asc");
+                                        }} ></i>
+                                        Stock
+                                        <i className="fas fa-sort-down" onClick={() => {
+                                            this.sorted("stock", "dsc");
+                                        }}></i>
+                                    </th>
+                                    <th scope="col">
+                                        <i className="fas fa-sort-up" onClick={() => {
+                                            this.sorted("rental", "asc");
+                                        }}></i>
+                                        Rental
+                                        <i className="fas fa-sort-down" onClick={() => {
+                                            this.sorted("rental", "dsc");
+                                        }}></i>
+                                    </th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {
-                                    this.state.movies.map((movie) => {
+                                    filteredArr.map((movie) => {
                                         return (
                                             <tr key={movie._id}>
-                                                <th scope="row"></th>
+                                                <th scope="row">{++count}</th>
                                                 <td>{movie.title}</td>
                                                 <td>{movie.genre.name}</td>
                                                 <td>{movie.numberInStock}</td>
