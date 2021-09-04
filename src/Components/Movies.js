@@ -7,16 +7,20 @@ export default class Movies extends Component {
         super();
         this.state = {
             movies: [],
+            genres: [{ _id: 'abcd', name: 'All Genres' }],
             searchText: "",
             currPage: 1,
-            limit: 3
+            limit: 3,
+            currGenre: 'All Genres'
         }
     }
 
     async componentDidMount() {
         let res = await axios.get('https://backend-react-movie.herokuapp.com/movies');
+        let genres = await axios.get('https://backend-react-movie.herokuapp.com/genres');
         this.setState({
-            movies: res.data.movies
+            movies: res.data.movies,
+            genres: [...this.state.genres, ...genres.data.genres]
         })
     }
 
@@ -57,10 +61,16 @@ export default class Movies extends Component {
         this.setState({ movies: tempArr })
     }
 
+    changeGenre = (e) => {
+        this.setState({
+            currGenre: e.target.innerText
+        })
+    }
+
     render() {
 
         let filteredArr = [];
-        let { movies, searchText, currPage, limit } = this.state;
+        let { movies, genres, searchText, currPage, limit, currGenre } = this.state;
         if (searchText === "") {
             filteredArr = movies;
         }
@@ -68,6 +78,15 @@ export default class Movies extends Component {
             filteredArr = movies.filter((movie) => {
                 let title = movie.title.toLowerCase();
                 if (title.includes(searchText.toLowerCase())) {
+                    return true;
+                }
+                return false;
+            })
+        }
+
+        if (currGenre !== 'All Genres') {
+            filteredArr = filteredArr.filter((movie) => {
+                if (movie.genre.name === currGenre) {
                     return true;
                 }
                 return false;
@@ -85,7 +104,7 @@ export default class Movies extends Component {
         let count = 0;
         return (
 
-            (filteredArr.length === 0)
+            (this.state.movies.length === 0)
                 ?
                 <div className="spinner-container">
                     <div className="spinner-border text-primary" role="status">
@@ -96,7 +115,13 @@ export default class Movies extends Component {
                 <div className="container">
                     <div className="row">
                         <div className="col-3">
-                            Hello
+                            <ul className="list-group">
+                                {genres.map((genre) => {
+                                    return (
+                                        <li key={genre._id} className={genre.name === currGenre ? "list-group-item active" : "list-group-item"} onClick={(e) => this.changeGenre(e)} >{genre.name}</li>
+                                    )
+                                })}
+                            </ul>
                         </div>
                         <div className="col-9">
                             <div className="input-group mb-3 mt-3">
